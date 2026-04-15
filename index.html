@@ -80,51 +80,67 @@
         </form>
     </div>
 </div>
-
 <script>
     const API_BASE_URL = "http://127.0.0.1:5000";
-async function init() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('logged')) {
-        const userData = {
-            is_logged_in: true,
-            username: urlParams.get('user'),
-            avatar: urlParams.get('avatar'),
-            user_id: urlParams.get('id')
-        };
-        localStorage.setItem('user_session', JSON.stringify(userData));
-        
-        window.history.replaceState({}, document.title, "/");
-    }
 
-    const savedUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
+    async function init() {
+        const authBar = document.getElementById('auth-bar');
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/market-data`);
-        const data = await res.json();
-        
-        renderAuth(savedUser); 
-        
-        renderValues(data.items);
-        renderMarket(data.all_market_listings);
-        renderAllies(data.allies);
-    } catch (e) {
-        console.error("Errore connessione API:", e);
-        document.getElementById('auth-bar').innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has('logged')) {
+            const user = {
+                is_logged_in: true,
+                username: urlParams.get('user'),
+                avatar: urlParams.get('avatar'),
+                id: urlParams.get('id')
+            };
+
+            localStorage.setItem('user_session', JSON.stringify(user));
+
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const savedUser = JSON.parse(localStorage.getItem('user_session'));
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/market-data`);
+            const data = await res.json();
+
+            if (savedUser && savedUser.is_logged_in) {
+                renderAuth(savedUser);
+            } else {
+                renderAuth(data.user);
+            }
+
+            renderValues(data.items);
+            renderMarket(data.all_market_listings);
+            renderAllies(data.allies);
+
+        } catch (e) {
+            console.error("Errore connessione API:", e);
+            authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+        }
     }
-}
 
     function renderAuth(user) {
-        const container = document.getElementById('auth-bar');
+        const authBar = document.getElementById('auth-bar');
         if (user && user.is_logged_in) {
-            container.innerHTML = `
-                <img src="${user.avatar}" class="nav-avatar">
-                <span style="font-weight:bold; margin-right:15px;">${user.username}</span>
-                <button class="tab-btn" style="background:var(--gold); color:black;" onclick="openModal()">+ ADD LISTING</button>
+            authBar.innerHTML = `
+                <div class="user-profile" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="${user.avatar}" alt="Avatar" class="avatar" style="width:35px; border-radius:50%;">
+                    <span>Benvenuto, <strong>${user.username}</strong></span>
+                    <button onclick="logout()" class="btn-logout" style="margin-left:10px; cursor:pointer;">Logout</button>
+                </div>
             `;
         } else {
-            container.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+            authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
         }
+    }
+
+    function logout() {
+        localStorage.removeItem('user_session');
+        window.location.href = window.location.pathname; // Ricarica pulito
     }
 
     function renderValues(items) {
@@ -133,17 +149,18 @@ async function init() {
         const modalFilterCont = document.getElementById('modal-filter-container');
         const modalGridCont = document.getElementById('wares-grid-container');
 
+        filterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
+        modalFilterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
+
         Object.keys(items).forEach(cat => {
-            const btn = `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
-            const mBtn = `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
-            filterCont.innerHTML += btn;
-            modalFilterCont.innerHTML += mBtn;
+            filterCont.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
+            modalFilterCont.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
 
             Object.values(items[cat]).forEach(item => {
                 listCont.innerHTML += `
                     <div class="value-row" data-category="${cat}">
                         <div class="col-item">
-                            <img src="${item.image_url || 'https://www.nomadfoods.com/wp-content/uploads/2018/08/placeholder-1-e1533569576673-960x960.png'}">
+                            <img src="${item.image_url || 'https://via.placeholder.com/50'}">
                             <span>${item.name}</span>
                         </div>
                         <div style="font-size:0.9rem; opacity:0.8;">${cat}</div>
@@ -155,7 +172,7 @@ async function init() {
 
                 modalGridCont.innerHTML += `
                     <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
-                        <img src="${item.image_url || 'https://www.nomadfoods.com/wp-content/uploads/2018/08/placeholder-1-e1533569576673-960x960.png'}">
+                        <img src="${item.image_url || 'https://via.placeholder.com/50'}">
                         <p style="font-size:0.8rem; margin:5px 0;">${item.name}</p>
                     </div>`;
             });
@@ -164,7 +181,8 @@ async function init() {
 
     function renderMarket(listings) {
         const cont = document.getElementById('market-list-container');
-        if (!listings.length) {
+        cont.innerHTML = ""; // Pulisci prima
+        if (!listings || !listings.length) {
             cont.innerHTML = '<tr><td colspan="4" style="text-align:center;">Market is empty...</td></tr>';
             return;
         }
@@ -181,6 +199,8 @@ async function init() {
 
     function renderAllies(allies) {
         const cont = document.getElementById('allies-container');
+        if(!cont) return;
+        cont.innerHTML = "";
         allies.forEach(guild => {
             const tags = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
             cont.innerHTML += `
@@ -195,6 +215,7 @@ async function init() {
                 </div>`;
         });
     }
+
 
     function showSection(id, btn) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -227,22 +248,36 @@ async function init() {
         document.getElementById('selection_label').innerText = name;
     }
 
-    document.getElementById('add-item-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const payload = {
-            item_name: document.getElementById('selected_item_name').value,
-            price: document.getElementById('form-price').value,
-            quantity: document.getElementById('form-qty').value
-        };
-        const res = await fetch(`${API_BASE_URL}/api/add_item`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) location.reload();
-    };
+    const addForm = document.getElementById('add-item-form');
+    if (addForm) {
+        addForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const savedUser = JSON.parse(localStorage.getItem('user_session'));
+            if (!savedUser) {
+                alert("Devi essere loggato!");
+                return;
+            }
 
-    window.onclick = (event) => { if (event.target == document.getElementById('createModal')) closeModal(); }
+            const payload = {
+                user_id: savedUser.id,
+                username: savedUser.username,
+                item_name: document.getElementById('selected_item_name').value,
+                price: document.getElementById('form-price').value,
+                quantity: document.getElementById('form-qty').value
+            };
+
+            const res = await fetch(`${API_BASE_URL}/api/add_item`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) location.reload();
+        };
+    }
+
+    window.onclick = (event) => { 
+        if (event.target == document.getElementById('createModal')) closeModal(); 
+    }
 
     init();
 </script>
