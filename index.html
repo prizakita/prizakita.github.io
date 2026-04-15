@@ -10,7 +10,7 @@
 <body>
 
 <div class="scroll">
-    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️ V0.1</h1>
+    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️ V0.2</h1>
 
     <div id="auth-bar" class="auth-bar">
         </div>
@@ -57,26 +57,24 @@
     </div>
 </div>
 
-<div id="createModal">
+<div id="createModal" class="modal">
     <div class="modal-content">
-        <span style="float:right; cursor:pointer; font-size:2rem;" onclick="closeModal()">&times;</span>
-        <h2 style="text-align:center; font-family:'MedievalSharp';">Post New Wares</h2>
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Metti in vendita un oggetto</h2>
         
-        <div id="modal-filter-container" class="filter-container">
-            <button class="filter-btn active" onclick="filterList('wares', 'all', this)">All</button>
+        <form id="add-item-form">
+            <div id="modal-filter-container"></div>
+            <div id="wares-grid-container"></div>
+            
+            <div class="form-inputs">
+                <label id="selection_label">Seleziona un oggetto dalla lista sopra</label>
+                <input type="hidden" id="selected_item_name" required>
+                
+                <input type="number" id="form-price" placeholder="Prezzo in gold" required>
+                <input type="number" id="form-qty" placeholder="Quantità" required>
+                
+                <button type="submit" class="btn-submit-market">Conferma Vendita</button>
             </div>
-
-        <div class="items-grid" id="wares-grid-container">
-            </div>
-
-        <form id="add-item-form" style="margin-top:20px;">
-            <input type="hidden" id="selected_item_name" required>
-            <p style="text-align:center;">Selected: <span id="selection_label" class="red-text">None</span></p>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="form-price" placeholder="Price" style="flex:1; padding:10px;" required>
-                <input type="number" id="form-qty" value="1" min="1" style="width:60px; padding:10px;">
-            </div>
-            <button type="submit" class="tab-btn" style="width:100%; margin-top:15px; background:var(--border-ink); color:white;">POST LISTING</button>
         </form>
     </div>
 </div>
