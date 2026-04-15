@@ -96,6 +96,7 @@ if (urlParams.has('logged')) {
 
 async function init() {
     renderAuth(currentUser);
+    toggleAddButton(currentUser.is_logged_in);
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/market-data`);
@@ -113,14 +114,26 @@ function renderAuth(user) {
     const authBar = document.getElementById('auth-bar');
     if (user && user.is_logged_in) {
         authBar.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${user.avatar}" style="width:30px; border-radius:50%;">
-                <span>${user.username}</span>
-                <button onclick="localStorage.clear(); location.reload();">Logout</button>
+            <div class="user-profile">
+                <img src="${user.avatar}" alt="Avatar" class="avatar">
+                <span>Benvenuto, ${user.username}</span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
             </div>`;
     } else {
         authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
     }
+}
+
+function toggleAddButton(show) {
+    const addBtn = document.getElementById('btn-open-modal');
+    if (addBtn) {
+        addBtn.style.display = show ? 'block' : 'none';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('user_session');
+    window.location.reload();
 }
 
 init();
