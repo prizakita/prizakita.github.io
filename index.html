@@ -10,34 +10,36 @@
 <body>
 
 <div class="scroll">
-    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️ V0.2</h1>
+    <h1 class="main-title">⚔️ Prizakita Merchant Ledger ⚔️ V0.2</h1>
 
-    <div id="auth-bar" class="auth-bar">
-        </div>
+    <div id="auth-bar" class="auth-bar"></div>
 
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="showSection('values', this)">VALUES</button>
-        <button class="tab-btn" onclick="showSection('guild-market', this)">GUILD MARKET</button>
-        <button class="tab-btn" onclick="showSection('allies', this)">ALLIED GUILDS</button>
+        <button class="tab-btn active" onclick="showSection('values-section', this)">VALUES</button>
+        <button class="tab-btn" onclick="showSection('market-section', this)">GUILD MARKET</button>
+        <button class="tab-btn" onclick="showSection('allies-section', this)">ALLIED GUILDS</button>
     </div>
 
-    <div id="values" class="content-section active">
-        <div id="values-filter-container" class="filter-container">
-            <button class="filter-btn active" onclick="filterList('values', 'all', this)">All</button>
-            </div>
+    <div class="action-container">
+        <button id="btn-open-modal" class="btn-main" onclick="openModal()">+ ADD LISTING</button>
+    </div>
 
-        <div class="values-table-header">
+    <div id="values-section" class="content-section active">
+        <div id="values-filters" class="filter-container">
+            <button class="filter-btn active" onclick="filterList('values', 'all', this)">All</button>
+        </div>
+
+        <div class="table-header-grid">
             <span>ITEM</span>
             <span>CATEGORY</span>
             <span>VALUE</span>
             <span>DEMAND</span>
         </div>
-        <div id="values-list-container">
-            </div>
+        <div id="values-list"></div>
     </div>
 
-    <div id="guild-market" class="content-section">
-        <table class="listing-table">
+    <div id="market-section" class="content-section">
+        <table class="market-table">
             <thead>
                 <tr>
                     <th>Merchant</th>
@@ -46,38 +48,39 @@
                     <th>Qty</th>
                 </tr>
             </thead>
-            <tbody id="market-list-container">
-                </tbody>
+            <tbody id="market-list"></tbody>
         </table>
     </div>
 
-    <div id="allies" class="content-section">
-        <div id="allies-container" class="allies-container">
-            </div>
+    <div id="allies-section" class="content-section">
+        <div id="allies-list" class="allies-grid"></div>
     </div>
 </div>
 
 <div id="createModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Metti in vendita un oggetto</h2>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2 class="modal-title">Metti in vendita un oggetto</h2>
         
         <form id="add-item-form">
-            <div id="modal-filter-container"></div>
-            <div id="wares-grid-container"></div>
+            <div id="modal-filters" class="filter-container"></div>
+            <div id="modal-grid" class="wares-grid"></div>
             
-            <div class="form-inputs">
-                <label id="selection_label">Seleziona un oggetto dalla lista sopra</label>
+            <div class="form-body">
+                <label id="selection_label" class="selection-status">Seleziona un oggetto dalla lista sopra</label>
                 <input type="hidden" id="selected_item_name" required>
                 
-                <input type="number" id="form-price" placeholder="Prezzo in gold" required>
-                <input type="number" id="form-qty" placeholder="Quantità" required>
+                <div class="input-group">
+                    <input type="number" id="form-price" placeholder="Prezzo (Gold)" required>
+                    <input type="number" id="form-qty" placeholder="Quantità" required>
+                </div>
                 
-                <button type="submit" class="btn-submit-market">Conferma Vendita</button>
+                <button type="submit" class="btn-submit">Conferma Vendita</button>
             </div>
         </form>
     </div>
 </div>
+
 <script>
 const API_BASE_URL = "http://127.0.0.1:5000";
 
@@ -96,11 +99,11 @@ if (urlParams.has('logged')) {
 }
 
 async function init() {
-    renderAuth(currentUser);
+    renderUserUI(currentUser);
     
     const addBtn = document.getElementById('btn-open-modal');
     if (addBtn) {
-        addBtn.style.display = currentUser.is_logged_in ? 'block' : 'none';
+        addBtn.style.display = currentUser.is_logged_in ? 'inline-block' : 'none';
     }
 
     try {
@@ -111,59 +114,61 @@ async function init() {
         renderMarket(data.all_market_listings);
         renderAllies(data.allies);
     } catch (e) {
-        console.error("Errore fetch:", e);
+        console.error(e);
     }
 }
 
-function showSection(id, btn) {
+function showSection(sectionId, btn) {
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     
-    const target = document.getElementById(id);
-    if (target) target.classList.add('active');
-    if (btn) btn.classList.add('active');
+    document.getElementById(sectionId).classList.add('active');
+    btn.classList.add('active');
 }
 
-function renderAuth(user) {
-    const authBar = document.getElementById('auth-bar');
-    if (!authBar) return;
+function renderUserUI(user) {
+    const bar = document.getElementById('auth-bar');
+    if (!bar) return;
     
     if (user && user.is_logged_in) {
-        authBar.innerHTML = `
-            <div class="user-profile-box">
-                <img src="${user.avatar}" alt="Avatar" class="user-avatar-small">
-                <span class="user-name-text">${user.username}</span>
-                <button onclick="logout()" class="btn-logout-custom">Logout</button>
+        bar.innerHTML = `
+            <div class="user-chip">
+                <img src="${user.avatar}" class="user-avatar">
+                <span class="user-name">${user.username}</span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
             </div>`;
     } else {
-        authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+        bar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord-login">LOGIN WITH DISCORD</a>`;
     }
 }
 
 function renderValues(items) {
-    const listCont = document.getElementById('values-list-container');
-    const filterCont = document.getElementById('values-filter-container');
-    const modalFilterCont = document.getElementById('modal-filter-container');
-    const modalGridCont = document.getElementById('wares-grid-container');
-    if (!listCont) return;
+    const list = document.getElementById('values-list');
+    const filters = document.getElementById('values-filters');
+    const mFilters = document.getElementById('modal-filters');
+    const mGrid = document.getElementById('modal-grid');
+    if (!list) return;
 
-    filterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
-    modalFilterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
-    listCont.innerHTML = "";
-    modalGridCont.innerHTML = "";
+    filters.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
+    mFilters.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
+    list.innerHTML = "";
+    mGrid.innerHTML = "";
 
     Object.keys(items).forEach(cat => {
-        filterCont.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
-        modalFilterCont.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
+        filters.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
+        mFilters.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
+        
         Object.values(items[cat]).forEach(item => {
-            listCont.innerHTML += `
+            list.innerHTML += `
                 <div class="value-row" data-category="${cat}">
-                    <div class="col-item"><img src="${item.image_url || ''}"><span>${item.name}</span></div>
-                    <div class="gold-text">${item.value || 100}g</div>
-                    <div><div class="demand-bar"><div class="demand-fill" style="width: ${item.demand || 50}%"></div></div></div>
+                    <div class="item-info"><img src="${item.image_url || ''}"><span>${item.name}</span></div>
+                    <div class="item-cat">${cat}</div>
+                    <div class="gold-price">${item.value || 100}g</div>
+                    <div class="demand-box"><div class="demand-bar"><div class="bar-fill" style="width: ${item.demand || 50}%"></div></div></div>
                 </div>`;
-            modalGridCont.innerHTML += `
-                <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
+            
+            mGrid.innerHTML += `
+                <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
                     <img src="${item.image_url || ''}"><p>${item.name}</p>
                 </div>`;
         });
@@ -171,69 +176,59 @@ function renderValues(items) {
 }
 
 function renderMarket(listings) {
-    const cont = document.getElementById('market-list-container');
-    if (!cont) return;
-    cont.innerHTML = listings.length ? "" : '<tr><td colspan="4">Market is empty...</td></tr>';
+    const container = document.getElementById('market-list');
+    if (!container) return;
+    container.innerHTML = listings.length ? "" : '<tr><td colspan="4">Market is empty...</td></tr>';
     listings.forEach(entry => {
-        cont.innerHTML += `<tr><td>${entry.seller_name}</td><td>${entry.item}</td><td class="gold-text">${entry.prezzo}g</td><td>x${entry.quantity}</td></tr>`;
+        container.innerHTML += `<tr><td>${entry.seller_name}</td><td>${entry.item}</td><td class="gold-price">${entry.prezzo}g</td><td>x${entry.quantity}</td></tr>`;
     });
 }
 
 function renderAllies(allies) {
-    const cont = document.getElementById('allies-container');
-    if (!cont) return;
-    cont.innerHTML = "";
+    const container = document.getElementById('allies-list');
+    if (!container) return;
+    container.innerHTML = "";
     allies.forEach(guild => {
-        const tags = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
-        cont.innerHTML += `
+        const tags = guild.featured_products.map(p => `<span class="tag">${p}</span>`).join('');
+        container.innerHTML += `
             <div class="guild-card">
                 <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
-                <div class="guild-body"><h3>${guild.name}</h3><p>${guild.description}</p><div>${tags}</div>
-                <a href="${guild.discord_url}" class="btn-discord-join" target="_blank">JOIN</a></div>
+                <div class="guild-content"><h3>${guild.name}</h3><p>${guild.description}</p><div class="tags-row">${tags}</div>
+                <a href="${guild.discord_url}" class="btn-join" target="_blank">JOIN</a></div>
             </div>`;
     });
 }
 
 function filterList(type, category, btn) {
-    const parent = btn.parentElement;
-    parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const selector = type === 'values' ? '.value-row' : '.item-card';
+    const selector = type === 'values' ? '.value-row' : '.ware-card';
     document.querySelectorAll(selector).forEach(el => {
         el.style.display = (category === 'all' || el.dataset.category === category) ? (type === 'values' ? 'grid' : 'block') : 'none';
     });
 }
 
 function selectItem(el, name) {
-    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.ware-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById('selected_item_name').value = name;
     document.getElementById('selection_label').innerText = name;
 }
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }
-function openModal() { 
-    document.getElementById('createModal').style.display = 'block'; 
-}
+function openModal() { document.getElementById('createModal').style.display = 'block'; }
+function closeModal() { document.getElementById('createModal').style.display = 'none'; }
 
-function closeModal() { 
-    document.getElementById('createModal').style.display = 'none'; 
-}
-
-const addItemForm = document.getElementById('add-item-form');
-if (addItemForm) {
-    addItemForm.onsubmit = async (e) => {
+const form = document.getElementById('add-item-form');
+if (form) {
+    form.onsubmit = async (e) => {
         e.preventDefault();
-
-        const savedUser = JSON.parse(localStorage.getItem('user_session'));
-        if (!savedUser || !savedUser.is_logged_in) {
-            alert("Devi essere loggato!");
-            return;
-        }
+        const user = JSON.parse(localStorage.getItem('user_session'));
+        if (!user) return;
 
         const payload = {
-            seller_id: savedUser.id,
-            seller_name: savedUser.username,
+            seller_id: user.id,
+            seller_name: user.username,
             item: document.getElementById('selected_item_name').value,
             prezzo: document.getElementById('form-price').value,
             quantity: document.getElementById('form-qty').value
@@ -245,14 +240,8 @@ if (addItemForm) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
-            if (res.ok) {
-                closeModal();
-                location.reload();
-            }
-        } catch (err) {
-            console.error("Errore invio:", err);
-        }
+            if (res.ok) location.reload();
+        } catch (err) { console.error(err); }
     };
 }
 
