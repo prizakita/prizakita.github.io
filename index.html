@@ -192,13 +192,19 @@ function renderAllies(allies) {
     const container = document.getElementById('allies-list');
     if (!container) return;
     container.innerHTML = "";
+
     allies.forEach(guild => {
-        const tags = guild.featured_products.map(p => `<span class="tag">${p}</span>`).join('');
+        const tagsHTML = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
+
         container.innerHTML += `
             <div class="guild-card">
                 <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
-                <div class="guild-content"><h3>${guild.name}</h3><p>${guild.description}</p><div class="tags-row">${tags}</div>
-                <a href="${guild.discord_url}" class="btn-join" target="_blank">JOIN</a></div>
+                <div class="guild-body">
+                    <h3>${guild.name}</h3>
+                    <p class="guild-desc">${guild.description}</p>
+                    <div class="tags-container">${tagsHTML}</div>
+                    <a href="${guild.discord_url}" class="btn-discord-join" target="_blank">JOIN DISCORD</a>
+                </div>
             </div>`;
     });
 }
@@ -212,11 +218,18 @@ function filterList(type, category, btn) {
     });
 }
 
-function selectItem(el, name) {
+function selectItem(el, name, cat, defaultValue) {
     document.querySelectorAll('.ware-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
+
     document.getElementById('selected_item_name').value = name;
-    document.getElementById('selection_label').innerText = name;
+    document.getElementById('selection_label').innerText = "Selected Item: " + name;
+
+    const priceInput = document.getElementById('form-price');
+    const qtyInput = document.getElementById('form-qty');
+
+    if(priceInput) priceInput.value = defaultValue;
+    if(qtyInput) qtyInput.value = 1;
 }
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }

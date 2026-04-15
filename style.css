@@ -407,3 +407,107 @@ body {
 .btn-join:hover {
     background: #4752C4;
 }
+
+
+/* --- GRIGLIA ALLEATI --- */
+.allies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    padding: 20px;
+}
+
+/* --- CARD SINGOLA --- */
+.guild-card {
+    background: rgba(255, 255, 255, 0.3); /* Effetto carta */
+    border: 3px solid var(--border-ink);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
+}
+
+.guild-banner {
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    border-bottom: 2px solid var(--border-ink);
+    background-color: #ddd; /* Fallback se manca l'immagine */
+}
+
+.guild-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    text-align: left; /* Allinea il testo a sinistra */
+}
+
+.guild-body h3 {
+    margin: 0 0 10px 0;
+    font-family: 'MedievalSharp', cursive;
+    color: var(--accent-red);
+}
+
+.guild-desc {
+    font-size: 0.95rem;
+    font-style: italic;
+    margin-bottom: 15px;
+    color: var(--border-ink);
+}
+
+/* --- TAG PRODOTTI --- */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.p-tag {
+    background: var(--border-ink);
+    color: var(--parchment);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-family: 'MedievalSharp';
+}
+
+/* --- BOTTONE JOIN DISCORD --- */
+.btn-discord-join {
+    background: #5865F2;
+    color: white !important;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 4px;
+    font-family: 'MedievalSharp';
+    margin-top: auto; /* Lo spinge sempre in fondo alla card */
+}
+
+/* --- STILE INPUT FORM --- */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-family: 'MedievalSharp';
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--border-ink);
+    font-size: 1.1rem;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-ink);
+    background: rgba(255, 255, 255, 0.4);
+    font-family: 'Almendra', serif;
+    font-size: 1rem;
+    box-sizing: border-box; /* Evita che l'input esca dai bordi */
+}
