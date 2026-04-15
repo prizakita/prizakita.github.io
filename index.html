@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prizakita Trade Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scroll">
+    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️</h1>
+
+    <div id="auth-bar" class="auth-bar">
+        </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showSection('values', this)">VALUES</button>
+        <button class="tab-btn" onclick="showSection('guild-market', this)">GUILD MARKET</button>
+        <button class="tab-btn" onclick="showSection('allies', this)">ALLIED GUILDS</button>
+    </div>
+
+    <div id="values" class="content-section active">
+        <div id="values-filter-container" class="filter-container">
+            <button class="filter-btn active" onclick="filterList('values', 'all', this)">All</button>
+            </div>
+
+        <div class="values-table-header">
+            <span>ITEM</span>
+            <span>CATEGORY</span>
+            <span>VALUE</span>
+            <span>DEMAND</span>
+        </div>
+        <div id="values-list-container">
+            </div>
+    </div>
+
+    <div id="guild-market" class="content-section">
+        <table class="listing-table">
+            <thead>
+                <tr>
+                    <th>Merchant</th>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                </tr>
+            </thead>
+            <tbody id="market-list-container">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="allies" class="content-section">
+        <div id="allies-container" class="allies-container">
+            </div>
+    </div>
+</div>
+
+<div id="createModal">
+    <div class="modal-content">
+        <span style="float:right; cursor:pointer; font-size:2rem;" onclick="closeModal()">&times;</span>
+        <h2 style="text-align:center; font-family:'MedievalSharp';">Post New Wares</h2>
+        
+        <div id="modal-filter-container" class="filter-container">
+            <button class="filter-btn active" onclick="filterList('wares', 'all', this)">All</button>
+            </div>
+
+        <div class="items-grid" id="wares-grid-container">
+            </div>
+
+        <form id="add-item-form" style="margin-top:20px;">
+            <input type="hidden" id="selected_item_name" required>
+            <p style="text-align:center;">Selected: <span id="selection_label" class="red-text">None</span></p>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="form-price" placeholder="Price" style="flex:1; padding:10px;" required>
+                <input type="number" id="form-qty" value="1" min="1" style="width:60px; padding:10px;">
+            </div>
+            <button type="submit" class="tab-btn" style="width:100%; margin-top:15px; background:var(--border-ink); color:white;">POST LISTING</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = "http://127.0.0.1:5000";
+
+    // 1. CARICAMENTO DATI
+    async function init() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/market-data`);
+            const data = await res.json();
+            
+            renderAuth(data.user);
+            renderValues(data.items);
+            renderMarket(data.all_market_listings);
+            renderAllies(data.allies);
+        } catch (e) {
+            console.error("Errore connessione API:", e);
+            document.getElementById('auth-bar').innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+        }
+    }
+
+    // 2. RENDER AUTH BAR
+    function renderAuth(user) {
+        const container = document.getElementById('auth-bar');
+        if (user && user.is_logged_in) {
+            container.innerHTML = `
+                <img src="${user.avatar}" class="nav-avatar">
+                <span style="font-weight:bold; margin-right:15px;">${user.username}</span>
+                <button class="tab-btn" style="background:var(--gold); color:black;" onclick="openModal()">+ ADD LISTING</button>
+            `;
+        } else {
+            container.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+        }
+    }
+
+    // 3. RENDER VALUES & FILTERS
+    function renderValues(items) {
+        const listCont = document.getElementById('values-list-container');
+        const filterCont = document.getElementById('values-filter-container');
+        const modalFilterCont = document.getElementById('modal-filter-container');
+        const modalGridCont = document.getElementById('wares-grid-container');
+
+        Object.keys(items).forEach(cat => {
+            // Aggiungi bottoni filtro
+            const btn = `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
+            const mBtn = `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
+            filterCont.innerHTML += btn;
+            modalFilterCont.innerHTML += mBtn;
+
+            Object.values(items[cat]).forEach(item => {
+                // Riga Tabella
+                listCont.innerHTML += `
+                    <div class="value-row" data-category="${cat}">
+                        <div class="col-item">
+                            <img src="${item.image_url || 'https://www.nomadfoods.com/wp-content/uploads/2018/08/placeholder-1-e1533569576673-960x960.png'}">
+                            <span>${item.name}</span>
+                        </div>
+                        <div style="font-size:0.9rem; opacity:0.8;">${cat}</div>
+                        <div class="gold-text">${item.value || 100}g</div>
+                        <div>
+                            <div class="demand-bar"><div class="demand-fill" style="width: ${item.demand || 50}%"></div></div>
+                        </div>
+                    </div>`;
+                
+                // Card Modale
+                modalGridCont.innerHTML += `
+                    <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
+                        <img src="${item.image_url || 'https://www.nomadfoods.com/wp-content/uploads/2018/08/placeholder-1-e1533569576673-960x960.png'}">
+                        <p style="font-size:0.8rem; margin:5px 0;">${item.name}</p>
+                    </div>`;
+            });
+        });
+    }
+
+    // 4. RENDER MARKET
+    function renderMarket(listings) {
+        const cont = document.getElementById('market-list-container');
+        if (!listings.length) {
+            cont.innerHTML = '<tr><td colspan="4" style="text-align:center;">Market is empty...</td></tr>';
+            return;
+        }
+        listings.forEach(entry => {
+            cont.innerHTML += `
+                <tr>
+                    <td><strong>${entry.seller_name}</strong></td>
+                    <td>${entry.item}</td>
+                    <td class="gold-text">${entry.prezzo}g</td>
+                    <td>x${entry.quantity}</td>
+                </tr>`;
+        });
+    }
+
+    // 5. RENDER ALLIES
+    function renderAllies(allies) {
+        const cont = document.getElementById('allies-container');
+        allies.forEach(guild => {
+            const tags = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
+            cont.innerHTML += `
+                <div class="guild-card">
+                    <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
+                    <div class="guild-body">
+                        <h3 style="margin-top:0; font-family:'MedievalSharp';">${guild.name}</h3>
+                        <p class="guild-desc">${guild.description}</p>
+                        <div style="margin-bottom:10px;">${tags}</div>
+                        <a href="${guild.discord_url}" class="btn-discord-join" target="_blank">JOIN DISCORD</a>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // LOGICA UI (Copiata esattamente dalla tua dashboard originale)
+    function showSection(id, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function openModal() { document.getElementById('createModal').style.display='block'; }
+    function closeModal() { document.getElementById('createModal').style.display='none'; }
+
+    function filterList(type, category, btn) {
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const selector = type === 'values' ? '.value-row' : '.item-card';
+        document.querySelectorAll(selector).forEach(el => {
+            if (category === 'all' || el.dataset.category === category) {
+                el.style.display = (type === 'values') ? 'grid' : 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+    }
+
+    function selectItem(el, name) {
+        document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selected_item_name').value = name;
+        document.getElementById('selection_label').innerText = name;
+    }
+
+    // Invio Form Post New Wares
+    document.getElementById('add-item-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+            item_name: document.getElementById('selected_item_name').value,
+            price: document.getElementById('form-price').value,
+            quantity: document.getElementById('form-qty').value
+        };
+        const res = await fetch(`${API_BASE_URL}/api/add_item`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) location.reload();
+    };
+
+    window.onclick = (event) => { if (event.target == document.getElementById('createModal')) closeModal(); }
+
+    init();
+</script>
+</body>
+</html>
