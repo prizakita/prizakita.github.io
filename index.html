@@ -10,7 +10,7 @@
 <body>
 
 <div class="scroll">
-    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️</h1>
+    <h1 style="text-align:center; font-family: 'MedievalSharp';">⚔️ Prizakita Merchant Ledger ⚔️ V0.1</h1>
 
     <div id="auth-bar" class="auth-bar">
         </div>
@@ -214,8 +214,49 @@ function selectItem(el, name) {
 }
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }
-function openModal() { document.getElementById('createModal').style.display='block'; }
-function closeModal() { document.getElementById('createModal').style.display='none'; }
+function openModal() { 
+    document.getElementById('createModal').style.display = 'block'; 
+}
+
+function closeModal() { 
+    document.getElementById('createModal').style.display = 'none'; 
+}
+
+const addItemForm = document.getElementById('add-item-form');
+if (addItemForm) {
+    addItemForm.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const savedUser = JSON.parse(localStorage.getItem('user_session'));
+        if (!savedUser || !savedUser.is_logged_in) {
+            alert("Devi essere loggato!");
+            return;
+        }
+
+        const payload = {
+            seller_id: savedUser.id,
+            seller_name: savedUser.username,
+            item: document.getElementById('selected_item_name').value,
+            prezzo: document.getElementById('form-price').value,
+            quantity: document.getElementById('form-qty').value
+        };
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/add_item`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                closeModal();
+                location.reload();
+            }
+        } catch (err) {
+            console.error("Errore invio:", err);
+        }
+    };
+}
 
 init();
 </script>
