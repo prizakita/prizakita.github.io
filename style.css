@@ -223,8 +223,9 @@ body {
 }
 
 .ware-card { background: white; border: 1px solid #ccc; padding: 8px; text-align: center; cursor: pointer; }
+.ware-card p {margin: 0;font-size: 0.8rem;line-height: 1.2;color: var(--border-ink);}
 .ware-card.selected { border: 2px solid var(--accent-red); background: var(--gold); }
-.ware-card img { width: 45px; height: 45px; object-fit: contain; }
+.ware-card img {width: 45px !important;height: 45px !important;display: block;margin: 0 auto 5px;object-fit: contain;}
 
 .form-row {
     display: flex;

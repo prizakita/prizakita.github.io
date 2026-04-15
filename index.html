@@ -10,7 +10,8 @@
 <body>
 
 <div class="scroll">
-    <h1 class="main-title">⚔️ Prizakita Merchant Ledger ⚔️ V0.6</h1>
+    <h1 class="main-title">⚖️ The Merchants' Guild 🪙</h1>
+    <p> Site versione: V0.8 </p>
 
     <div id="auth-bar" class="auth-bar"></div>
 
@@ -222,10 +223,7 @@ function selectItem(el, name, cat, defaultValue) {
     document.getElementById('selection_label').innerText = "Selected Item: " + name;
 
     const priceInput = document.getElementById('form-price');
-    const qtyInput = document.getElementById('form-qty');
-
     if(priceInput) priceInput.value = defaultValue;
-    if(qtyInput) qtyInput.value = 1;
 }
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }
@@ -240,7 +238,7 @@ if (form) {
         if (!user) return;
 
         const payload = {
-            seller_id: user.id,
+            seller_id: String(user.id),
             seller_name: user.username,
             user_role: user.role,
             item: document.getElementById('selected_item_name').value,
