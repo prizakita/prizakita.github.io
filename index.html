@@ -84,7 +84,6 @@
 <script>
     const API_BASE_URL = "http://127.0.0.1:5000";
 
-    // 1. CARICAMENTO DATI
     async function init() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/market-data`);
@@ -100,7 +99,6 @@
         }
     }
 
-    // 2. RENDER AUTH BAR
     function renderAuth(user) {
         const container = document.getElementById('auth-bar');
         if (user && user.is_logged_in) {
@@ -114,7 +112,6 @@
         }
     }
 
-    // 3. RENDER VALUES & FILTERS
     function renderValues(items) {
         const listCont = document.getElementById('values-list-container');
         const filterCont = document.getElementById('values-filter-container');
@@ -122,14 +119,12 @@
         const modalGridCont = document.getElementById('wares-grid-container');
 
         Object.keys(items).forEach(cat => {
-            // Aggiungi bottoni filtro
             const btn = `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
             const mBtn = `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
             filterCont.innerHTML += btn;
             modalFilterCont.innerHTML += mBtn;
 
             Object.values(items[cat]).forEach(item => {
-                // Riga Tabella
                 listCont.innerHTML += `
                     <div class="value-row" data-category="${cat}">
                         <div class="col-item">
@@ -142,8 +137,7 @@
                             <div class="demand-bar"><div class="demand-fill" style="width: ${item.demand || 50}%"></div></div>
                         </div>
                     </div>`;
-                
-                // Card Modale
+
                 modalGridCont.innerHTML += `
                     <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
                         <img src="${item.image_url || 'https://www.nomadfoods.com/wp-content/uploads/2018/08/placeholder-1-e1533569576673-960x960.png'}">
@@ -153,7 +147,6 @@
         });
     }
 
-    // 4. RENDER MARKET
     function renderMarket(listings) {
         const cont = document.getElementById('market-list-container');
         if (!listings.length) {
@@ -171,7 +164,6 @@
         });
     }
 
-    // 5. RENDER ALLIES
     function renderAllies(allies) {
         const cont = document.getElementById('allies-container');
         allies.forEach(guild => {
@@ -189,7 +181,6 @@
         });
     }
 
-    // LOGICA UI (Copiata esattamente dalla tua dashboard originale)
     function showSection(id, btn) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -221,7 +212,6 @@
         document.getElementById('selection_label').innerText = name;
     }
 
-    // Invio Form Post New Wares
     document.getElementById('add-item-form').onsubmit = async (e) => {
         e.preventDefault();
         const payload = {
