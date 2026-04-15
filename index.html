@@ -81,6 +81,8 @@
     </div>
 </div>
 <script>
+const API_BASE_URL = "http://127.0.0.1:5000";
+
 let currentUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -107,9 +109,9 @@ async function init() {
         const res = await fetch(`${API_BASE_URL}/api/market-data`);
         const data = await res.json();
         
-        if (typeof renderValues === "function") renderValues(data.items);
-        if (typeof renderMarket === "function") renderMarket(data.all_market_listings);
-        if (typeof renderAllies === "function") renderAllies(data.allies);
+        renderValues(data.items);
+        renderMarket(data.all_market_listings);
+        renderAllies(data.allies);
     } catch (e) {
         console.error("Errore fetch:", e);
     }
@@ -131,10 +133,112 @@ function renderAuth(user) {
     }
 }
 
+function renderValues(items) {
+    const listCont = document.getElementById('values-list-container');
+    const filterCont = document.getElementById('values-filter-container');
+    const modalFilterCont = document.getElementById('modal-filter-container');
+    const modalGridCont = document.getElementById('wares-grid-container');
+
+    if (!listCont) return;
+
+    filterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
+    modalFilterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
+    listCont.innerHTML = "";
+    modalGridCont.innerHTML = "";
+
+    Object.keys(items).forEach(cat => {
+        filterCont.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
+        modalFilterCont.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
+
+        Object.values(items[cat]).forEach(item => {
+            listCont.innerHTML += `
+                <div class="value-row" data-category="${cat}">
+                    <div class="col-item">
+                        <img src="${item.image_url || 'https://via.placeholder.com/50'}">
+                        <span>${item.name}</span>
+                    </div>
+                    <div style="font-size:0.9rem; opacity:0.8;">${cat}</div>
+                    <div class="gold-text">${item.value || 100}g</div>
+                    <div>
+                        <div class="demand-bar"><div class="demand-fill" style="width: ${item.demand || 50}%"></div></div>
+                    </div>
+                </div>`;
+
+            modalGridCont.innerHTML += `
+                <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
+                    <img src="${item.image_url || 'https://via.placeholder.com/50'}">
+                    <p style="font-size:0.8rem; margin:5px 0;">${item.name}</p>
+                </div>`;
+        });
+    });
+}
+
+function renderMarket(listings) {
+    const cont = document.getElementById('market-list-container');
+    if (!cont) return;
+    cont.innerHTML = "";
+    if (!listings || !listings.length) {
+        cont.innerHTML = '<tr><td colspan="4" style="text-align:center;">Market is empty...</td></tr>';
+        return;
+    }
+    listings.forEach(entry => {
+        cont.innerHTML += `
+            <tr>
+                <td><strong>${entry.seller_name}</strong></td>
+                <td>${entry.item}</td>
+                <td class="gold-text">${entry.prezzo}g</td>
+                <td>x${entry.quantity}</td>
+            </tr>`;
+    });
+}
+
+function renderAllies(allies) {
+    const cont = document.getElementById('allies-container');
+    if (!cont) return;
+    cont.innerHTML = "";
+    allies.forEach(guild => {
+        const tags = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
+        cont.innerHTML += `
+            <div class="guild-card">
+                <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
+                <div class="guild-body">
+                    <h3 style="margin-top:0; font-family:'MedievalSharp';">${guild.name}</h3>
+                    <p class="guild-desc">${guild.description}</p>
+                    <div style="margin-bottom:10px;">${tags}</div>
+                    <a href="${guild.discord_url}" class="btn-discord-join" target="_blank">JOIN DISCORD</a>
+                </div>
+            </div>`;
+    });
+}
+
+function filterList(type, category, btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const selector = type === 'values' ? '.value-row' : '.item-card';
+    document.querySelectorAll(selector).forEach(el => {
+        if (category === 'all' || el.dataset.category === category) {
+            el.style.display = (type === 'values') ? 'grid' : 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+
+function selectItem(el, name) {
+    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selected_item_name').value = name;
+    document.getElementById('selection_label').innerText = name;
+}
+
 function logout() {
     localStorage.removeItem('user_session');
     window.location.reload();
 }
+
+function openModal() { document.getElementById('createModal').style.display='block'; }
+function closeModal() { document.getElementById('createModal').style.display='none'; }
 
 init();
 </script>
