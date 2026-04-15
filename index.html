@@ -11,7 +11,7 @@
 
 <div class="scroll">
     <h1 class="main-title">⚖️ The Merchants' Guild 🪙</h1>
-    <p> Version: V0.8.5 </p>
+    <p> Version: V0.8.6 </p>
 
     <div id="auth-bar" class="auth-bar"></div>
 
@@ -81,7 +81,7 @@
                         <input type="number" id="form-qty" class="input-field" placeholder="0" required>
                     </div>
                 </div>
-            
+        
                 <button type="submit" class="btn-submit">POST LISTING</button>
             </div>
         </form>
@@ -102,9 +102,11 @@ if (urlParams.has('logged')) {
         id: urlParams.get('id'),
         role: urlParams.get('role')
     };
-    console.log("Salvataggio sessione:", currentUser);
+    
+    console.log("Dati ricevuti dal server:", currentUser);
     localStorage.setItem('user_session', JSON.stringify(currentUser));
-    window.location.href = window.location.pathname; 
+
+    window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 async function init() {
