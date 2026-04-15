@@ -83,10 +83,13 @@
 
 <script>
     const API_BASE_URL = "http://127.0.0.1:5000";
-
     async function init() {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/market-data`);
+            const res = await fetch(`${API_BASE_URL}/api/market-data`, {
+                method: 'GET',
+                credentials: 'include' // <--- FONDAMENTALE per i cookie
+            });
+
             const data = await res.json();
             
             renderAuth(data.user);
