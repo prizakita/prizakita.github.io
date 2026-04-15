@@ -81,205 +81,49 @@
     </div>
 </div>
 <script>
-    const API_BASE_URL = "http://127.0.0.1:5000";
+let currentUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
 
-    async function init() {
-        const authBar = document.getElementById('auth-bar');
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('logged')) {
+    currentUser = {
+        is_logged_in: true,
+        username: urlParams.get('user'),
+        avatar: urlParams.get('avatar')
+    };
+    localStorage.setItem('user_session', JSON.stringify(currentUser));
+    window.location.href = "https://prizakita.github.io/"; 
+}
 
-        const urlParams = new URLSearchParams(window.location.search);
+async function init() {
+    renderAuth(currentUser);
 
-        if (urlParams.has('logged')) {
-            const user = {
-                is_logged_in: true,
-                username: urlParams.get('user'),
-                avatar: urlParams.get('avatar'),
-                id: urlParams.get('id')
-            };
-
-            localStorage.setItem('user_session', JSON.stringify(user));
-
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        const savedUser = JSON.parse(localStorage.getItem('user_session'));
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/market-data`);
-            const data = await res.json();
-
-            if (savedUser && savedUser.is_logged_in) {
-                renderAuth(savedUser);
-            } else {
-                renderAuth(data.user);
-            }
-
-            renderValues(data.items);
-            renderMarket(data.all_market_listings);
-            renderAllies(data.allies);
-
-        } catch (e) {
-            console.error("Errore connessione API:", e);
-            authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
-        }
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/market-data`);
+        const data = await res.json();
+        
+        renderValues(data.items);
+        renderMarket(data.all_market_listings);
+        renderAllies(data.allies);
+    } catch (e) {
+        console.log("Errore caricamento dati");
     }
+}
 
-    function renderAuth(user) {
-        const authBar = document.getElementById('auth-bar');
-        if (user && user.is_logged_in) {
-            authBar.innerHTML = `
-                <div class="user-profile" style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${user.avatar}" alt="Avatar" class="avatar" style="width:35px; border-radius:50%;">
-                    <span>Benvenuto, <strong>${user.username}</strong></span>
-                    <button onclick="logout()" class="btn-logout" style="margin-left:10px; cursor:pointer;">Logout</button>
-                </div>
-            `;
-        } else {
-            authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
-        }
+function renderAuth(user) {
+    const authBar = document.getElementById('auth-bar');
+    if (user && user.is_logged_in) {
+        authBar.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${user.avatar}" style="width:30px; border-radius:50%;">
+                <span>${user.username}</span>
+                <button onclick="localStorage.clear(); location.reload();">Logout</button>
+            </div>`;
+    } else {
+        authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
     }
+}
 
-    function logout() {
-        localStorage.removeItem('user_session');
-        window.location.href = window.location.pathname; // Ricarica pulito
-    }
-
-    function renderValues(items) {
-        const listCont = document.getElementById('values-list-container');
-        const filterCont = document.getElementById('values-filter-container');
-        const modalFilterCont = document.getElementById('modal-filter-container');
-        const modalGridCont = document.getElementById('wares-grid-container');
-
-        filterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
-        modalFilterCont.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
-
-        Object.keys(items).forEach(cat => {
-            filterCont.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
-            modalFilterCont.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
-
-            Object.values(items[cat]).forEach(item => {
-                listCont.innerHTML += `
-                    <div class="value-row" data-category="${cat}">
-                        <div class="col-item">
-                            <img src="${item.image_url || 'https://via.placeholder.com/50'}">
-                            <span>${item.name}</span>
-                        </div>
-                        <div style="font-size:0.9rem; opacity:0.8;">${cat}</div>
-                        <div class="gold-text">${item.value || 100}g</div>
-                        <div>
-                            <div class="demand-bar"><div class="demand-fill" style="width: ${item.demand || 50}%"></div></div>
-                        </div>
-                    </div>`;
-
-                modalGridCont.innerHTML += `
-                    <div class="item-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
-                        <img src="${item.image_url || 'https://via.placeholder.com/50'}">
-                        <p style="font-size:0.8rem; margin:5px 0;">${item.name}</p>
-                    </div>`;
-            });
-        });
-    }
-
-    function renderMarket(listings) {
-        const cont = document.getElementById('market-list-container');
-        cont.innerHTML = ""; // Pulisci prima
-        if (!listings || !listings.length) {
-            cont.innerHTML = '<tr><td colspan="4" style="text-align:center;">Market is empty...</td></tr>';
-            return;
-        }
-        listings.forEach(entry => {
-            cont.innerHTML += `
-                <tr>
-                    <td><strong>${entry.seller_name}</strong></td>
-                    <td>${entry.item}</td>
-                    <td class="gold-text">${entry.prezzo}g</td>
-                    <td>x${entry.quantity}</td>
-                </tr>`;
-        });
-    }
-
-    function renderAllies(allies) {
-        const cont = document.getElementById('allies-container');
-        if(!cont) return;
-        cont.innerHTML = "";
-        allies.forEach(guild => {
-            const tags = guild.featured_products.map(p => `<span class="p-tag">${p}</span>`).join('');
-            cont.innerHTML += `
-                <div class="guild-card">
-                    <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
-                    <div class="guild-body">
-                        <h3 style="margin-top:0; font-family:'MedievalSharp';">${guild.name}</h3>
-                        <p class="guild-desc">${guild.description}</p>
-                        <div style="margin-bottom:10px;">${tags}</div>
-                        <a href="${guild.discord_url}" class="btn-discord-join" target="_blank">JOIN DISCORD</a>
-                    </div>
-                </div>`;
-        });
-    }
-
-
-    function showSection(id, btn) {
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
-    }
-
-    function openModal() { document.getElementById('createModal').style.display='block'; }
-    function closeModal() { document.getElementById('createModal').style.display='none'; }
-
-    function filterList(type, category, btn) {
-        const parent = btn.parentElement;
-        parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const selector = type === 'values' ? '.value-row' : '.item-card';
-        document.querySelectorAll(selector).forEach(el => {
-            if (category === 'all' || el.dataset.category === category) {
-                el.style.display = (type === 'values') ? 'grid' : 'block';
-            } else {
-                el.style.display = 'none';
-            }
-        });
-    }
-
-    function selectItem(el, name) {
-        document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        document.getElementById('selected_item_name').value = name;
-        document.getElementById('selection_label').innerText = name;
-    }
-
-    const addForm = document.getElementById('add-item-form');
-    if (addForm) {
-        addForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const savedUser = JSON.parse(localStorage.getItem('user_session'));
-            if (!savedUser) {
-                alert("Devi essere loggato!");
-                return;
-            }
-
-            const payload = {
-                user_id: savedUser.id,
-                username: savedUser.username,
-                item_name: document.getElementById('selected_item_name').value,
-                price: document.getElementById('form-price').value,
-                quantity: document.getElementById('form-qty').value
-            };
-
-            const res = await fetch(`${API_BASE_URL}/api/add_item`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) location.reload();
-        };
-    }
-
-    window.onclick = (event) => { 
-        if (event.target == document.getElementById('createModal')) closeModal(); 
-    }
-
-    init();
+init();
 </script>
 </body>
 </html>
