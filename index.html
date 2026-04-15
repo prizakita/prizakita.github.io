@@ -98,10 +98,11 @@ if (urlParams.has('logged')) {
         is_logged_in: true,
         username: urlParams.get('user'),
         avatar: urlParams.get('avatar'),
-        id: urlParams.get('id')
+        id: urlParams.get('id'),
+        role: urlParams.get('role')
     };
     localStorage.setItem('user_session', JSON.stringify(currentUser));
-    window.location.href = "https://prizakita.github.io/"; 
+    window.location.href = window.location.pathname; 
 }
 
 async function init() {
@@ -173,10 +174,7 @@ function renderValues(items) {
                     <div class="demand-box"><div class="demand-bar"><div class="bar-fill" style="width: ${item.demand || 50}%"></div></div></div>
                 </div>`;
             
-            mGrid.innerHTML += `
-                <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
-                    <img src="${item.image_url || ''}"><p>${item.name}</p>
-                </div>`;
+            mGrid.innerHTML += `<div onclick="selectItem(this, '${item.name}', '${cat}', ${item.value || 0})">...</div>`;
         });
     });
 }
@@ -248,6 +246,7 @@ if (form) {
         const payload = {
             seller_id: user.id,
             seller_name: user.username,
+            user_role: user.role,
             item: document.getElementById('selected_item_name').value,
             prezzo: document.getElementById('form-price').value,
             quantity: document.getElementById('form-qty').value
