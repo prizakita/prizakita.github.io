@@ -88,7 +88,8 @@ if (urlParams.has('logged')) {
     currentUser = {
         is_logged_in: true,
         username: urlParams.get('user'),
-        avatar: urlParams.get('avatar')
+        avatar: urlParams.get('avatar'),
+        id: urlParams.get('id')
     };
     localStorage.setItem('user_session', JSON.stringify(currentUser));
     window.location.href = "https://prizakita.github.io/"; 
@@ -96,22 +97,28 @@ if (urlParams.has('logged')) {
 
 async function init() {
     renderAuth(currentUser);
-    toggleAddButton(currentUser.is_logged_in);
+    
+    const addBtn = document.getElementById('btn-open-modal');
+    if (addBtn) {
+        addBtn.style.display = currentUser.is_logged_in ? 'block' : 'none';
+    }
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/market-data`);
         const data = await res.json();
         
-        renderValues(data.items);
-        renderMarket(data.all_market_listings);
-        renderAllies(data.allies);
+        if (typeof renderValues === "function") renderValues(data.items);
+        if (typeof renderMarket === "function") renderMarket(data.all_market_listings);
+        if (typeof renderAllies === "function") renderAllies(data.allies);
     } catch (e) {
-        console.log("Errore caricamento dati");
+        console.error("Errore fetch:", e);
     }
 }
 
 function renderAuth(user) {
     const authBar = document.getElementById('auth-bar');
+    if (!authBar) return;
+    
     if (user && user.is_logged_in) {
         authBar.innerHTML = `
             <div class="user-profile">
@@ -121,13 +128,6 @@ function renderAuth(user) {
             </div>`;
     } else {
         authBar.innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
-    }
-}
-
-function toggleAddButton(show) {
-    const addBtn = document.getElementById('btn-open-modal');
-    if (addBtn) {
-        addBtn.style.display = show ? 'block' : 'none';
     }
 }
 
