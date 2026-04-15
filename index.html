@@ -166,15 +166,11 @@ function renderValues(items) {
         mFilters.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
         
         Object.values(items[cat]).forEach(item => {
-            list.innerHTML += `
-                <div class="value-row" data-category="${cat}">
-                    <div class="item-info"><img src="${item.image_url || ''}"><span>${item.name}</span></div>
-                    <div class="item-cat">${cat}</div>
-                    <div class="gold-price">${item.value || 100}g</div>
-                    <div class="demand-box"><div class="demand-bar"><div class="bar-fill" style="width: ${item.demand || 50}%"></div></div></div>
+            mGrid.innerHTML += `
+                <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}', '${cat}', ${item.value || 0})">
+                    <img src="${item.image_url || ''}" alt="${item.name}">
+                    <p>${item.name}</p>
                 </div>`;
-            
-            mGrid.innerHTML += `<div onclick="selectItem(this, '${item.name}', '${cat}', ${item.value || 0})">...</div>`;
         });
     });
 }
