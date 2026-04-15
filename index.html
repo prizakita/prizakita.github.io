@@ -117,7 +117,7 @@ async function init() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/market-data`);
         const data = await res.json();
-        
+
         renderValues(data.items);
         renderMarket(data.all_market_listings);
         renderAllies(data.allies);
@@ -165,8 +165,23 @@ function renderValues(items) {
     Object.keys(items).forEach(cat => {
         filters.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
         mFilters.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
-        
+
         Object.values(items[cat]).forEach(item => {
+            list.innerHTML += `
+                <div class="value-row" data-category="${cat}">
+                    <div class="item-info">
+                        <img src="${item.image_url || ''}" alt="${item.name}">
+                        <span>${item.name}</span>
+                    </div>
+                    <div class="item-cat">${cat}</div>
+                    <div class="gold-price">${item.value || 0}g</div>
+                    <div class="demand-box">
+                        <div class="demand-bar">
+                            <div class="bar-fill" style="width: ${item.demand || 50}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+
             mGrid.innerHTML += `
                 <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}', '${cat}', ${item.value || 0})">
                     <img src="${item.image_url || ''}" alt="${item.name}">
