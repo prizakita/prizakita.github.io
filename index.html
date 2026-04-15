@@ -83,24 +83,36 @@
 
 <script>
     const API_BASE_URL = "http://127.0.0.1:5000";
-    async function init() {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/market-data`, {
-                method: 'GET',
-                credentials: 'include' // <--- FONDAMENTALE per i cookie
-            });
-
-            const data = await res.json();
-            
-            renderAuth(data.user);
-            renderValues(data.items);
-            renderMarket(data.all_market_listings);
-            renderAllies(data.allies);
-        } catch (e) {
-            console.error("Errore connessione API:", e);
-            document.getElementById('auth-bar').innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
-        }
+async function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('logged')) {
+        const userData = {
+            is_logged_in: true,
+            username: urlParams.get('user'),
+            avatar: urlParams.get('avatar'),
+            user_id: urlParams.get('id')
+        };
+        localStorage.setItem('user_session', JSON.stringify(userData));
+        
+        window.history.replaceState({}, document.title, "/");
     }
+
+    const savedUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/market-data`);
+        const data = await res.json();
+        
+        renderAuth(savedUser); 
+        
+        renderValues(data.items);
+        renderMarket(data.all_market_listings);
+        renderAllies(data.allies);
+    } catch (e) {
+        console.error("Errore connessione API:", e);
+        document.getElementById('auth-bar').innerHTML = `<a href="${API_BASE_URL}/login" class="btn-discord">LOGIN WITH DISCORD</a>`;
+    }
+}
 
     function renderAuth(user) {
         const container = document.getElementById('auth-bar');
