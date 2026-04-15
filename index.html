@@ -11,7 +11,7 @@
 
 <div class="scroll">
     <h1 class="main-title">⚖️ The Merchants' Guild 🪙</h1>
-    <p> Version: <V0 class="8 5"></V0> </p>
+    <p> Version: V0.8.5 </p>
 
     <div id="auth-bar" class="auth-bar"></div>
 
@@ -102,7 +102,7 @@ if (urlParams.has('logged')) {
         id: urlParams.get('id'),
         role: urlParams.get('role')
     };
-    console.log("Salvataggio sessione:", user);
+    console.log("Salvataggio sessione:", currentUser);
     localStorage.setItem('user_session', JSON.stringify(currentUser));
     window.location.href = window.location.pathname; 
 }
