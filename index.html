@@ -10,7 +10,7 @@
 <body>
 
 <div class="scroll">
-    <h1 class="main-title">⚔️ Prizakita Merchant Ledger ⚔️ V0.5</h1>
+    <h1 class="main-title">⚔️ Prizakita Merchant Ledger ⚔️ V0.6</h1>
 
     <div id="auth-bar" class="auth-bar"></div>
 
@@ -89,7 +89,6 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
 
 let currentUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
-let globalItemsData = {};
 
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('logged')) {
@@ -147,12 +146,60 @@ function renderUserUI(user) {
     }
 }
 
+function renderValues(items) {
+    const list = document.getElementById('values-list');
+    const filters = document.getElementById('values-filters');
+    const mFilters = document.getElementById('modal-filters');
+    const mGrid = document.getElementById('modal-grid');
+    if (!list) return;
+
+    filters.innerHTML = '<button class="filter-btn active" onclick="filterList(\'values\', \'all\', this)">All</button>';
+    mFilters.innerHTML = '<button class="filter-btn active" onclick="filterList(\'wares\', \'all\', this)">All</button>';
+    list.innerHTML = "";
+    mGrid.innerHTML = "";
+
+    Object.keys(items).forEach(cat => {
+        filters.innerHTML += `<button class="filter-btn" onclick="filterList('values', '${cat}', this)">${cat}</button>`;
+        mFilters.innerHTML += `<button class="filter-btn" onclick="filterList('wares', '${cat}', this)">${cat}</button>`;
+        
+        Object.values(items[cat]).forEach(item => {
+            list.innerHTML += `
+                <div class="value-row" data-category="${cat}">
+                    <div class="item-info"><img src="${item.image_url || ''}"><span>${item.name}</span></div>
+                    <div class="item-cat">${cat}</div>
+                    <div class="gold-price">${item.value || 100}g</div>
+                    <div class="demand-box"><div class="demand-bar"><div class="bar-fill" style="width: ${item.demand || 50}%"></div></div></div>
+                </div>`;
+            
+            mGrid.innerHTML += `
+                <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}')">
+                    <img src="${item.image_url || ''}"><p>${item.name}</p>
+                </div>`;
+        });
+    });
+}
+
 function renderMarket(listings) {
     const container = document.getElementById('market-list');
     if (!container) return;
     container.innerHTML = listings.length ? "" : '<tr><td colspan="4">Market is empty...</td></tr>';
     listings.forEach(entry => {
         container.innerHTML += `<tr><td>${entry.seller_name}</td><td>${entry.item}</td><td class="gold-price">${entry.prezzo}g</td><td>x${entry.quantity}</td></tr>`;
+    });
+}
+
+function renderAllies(allies) {
+    const container = document.getElementById('allies-list');
+    if (!container) return;
+    container.innerHTML = "";
+    allies.forEach(guild => {
+        const tags = guild.featured_products.map(p => `<span class="tag">${p}</span>`).join('');
+        container.innerHTML += `
+            <div class="guild-card">
+                <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
+                <div class="guild-content"><h3>${guild.name}</h3><p>${guild.description}</p><div class="tags-row">${tags}</div>
+                <a href="${guild.discord_url}" class="btn-join" target="_blank">JOIN</a></div>
+            </div>`;
     });
 }
 
@@ -165,57 +212,12 @@ function filterList(type, category, btn) {
     });
 }
 
-
-function renderValues(items) {
-    globalItemsData = items;
-    const list = document.getElementById('values-list');
-    const filters = document.getElementById('values-filters');
-    const mFilters = document.getElementById('modal-filters');
-    const mGrid = document.getElementById('modal-grid');
-
-    Object.keys(items).forEach(cat => {
-        Object.values(items[cat]).forEach(item => {
-
-            mGrid.innerHTML += `
-                <div class="ware-card" data-category="${cat}" onclick="selectItem(this, '${item.name}', '${cat}', ${item.value})">
-                    <img src="${item.image_url || ''}"><p>${item.name}</p>
-                </div>`;
-        });
-    });
-}
-
-function selectItem(el, name, cat, defaultValue) {
+function selectItem(el, name) {
     document.querySelectorAll('.ware-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    
     document.getElementById('selected_item_name').value = name;
-    document.getElementById('selection_label').innerText = "Selected: " + name;
-    
-    // Setta automaticamente il prezzo suggerito dal listino
-    document.getElementById('form-price').value = defaultValue;
-    document.getElementById('form-qty').value = 1; // Default quantità a 1
+    document.getElementById('selection_label').innerText = name;
 }
-
-function renderAllies(allies) {
-    const container = document.getElementById('allies-list');
-    if (!container) return;
-    container.innerHTML = "";
-    
-    allies.forEach(guild => {
-        const tags = guild.featured_products.map(p => `<span class="tag">${p}</span>`).join('');
-        container.innerHTML += `
-            <div class="guild-card">
-                <div class="guild-banner" style="background-image: url('${guild.banner_img}')"></div>
-                <div class="guild-content">
-                    <h3>${guild.name}</h3>
-                    <p class="guild-desc">${guild.description}</p>
-                    <div class="tags-row">${tags}</div>
-                    <a href="${guild.discord_url}" class="btn-join" target="_blank">JOIN DISCORD</a>
-                </div>
-            </div>`;
-    });
-}
-
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }
 function openModal() { document.getElementById('createModal').style.display = 'block'; }
