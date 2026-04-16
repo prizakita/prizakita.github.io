@@ -23,7 +23,7 @@
                     <img src="roblox.png" alt="Roblox">
                 </a>
             </div>
-            <span class="version-text">Version: V0.9</span>
+            <span class="version-text">Version: V0.9.1</span>
         </div>
 
         <div id="auth-bar" class="auth-bar"></div>
@@ -261,6 +261,14 @@ function selectItem(el, name, cat, defaultValue) {
 
     const priceInput = document.getElementById('form-price');
     if(priceInput) priceInput.value = defaultValue;
+}
+
+function showAlert(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert-error';
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
 }
 
 function logout() { localStorage.removeItem('user_session'); window.location.reload(); }
