@@ -23,7 +23,7 @@
                     <img src="roblox.png" alt="Roblox">
                 </a>
             </div>
-            <span class="version-text">Version: V0.9.1</span>
+            <span class="version-text">Version: V1</span>
         </div>
 
         <div id="auth-bar" class="auth-bar"></div>
@@ -94,13 +94,13 @@
                         <label>Asking Price (Gold)</label>
                         <input type="number" id="form-price" class="input-field" placeholder="0" required>
                     </div>
-                
+
                     <div class="form-group">
                         <label>Quantity</label>
                         <input type="number" id="form-qty" class="input-field" placeholder="0" required>
                     </div>
                 </div>
-        
+
                 <button type="submit" class="btn-submit">POST LISTING</button>
             </div>
         </form>
@@ -108,7 +108,7 @@
 </div>
 
 <script>
-const API_BASE_URL = "http://127.0.0.1:5000";
+const API_BASE_URL = "http://152.53.247.114:5000";
 
 let currentUser = JSON.parse(localStorage.getItem('user_session')) || { is_logged_in: false };
 
